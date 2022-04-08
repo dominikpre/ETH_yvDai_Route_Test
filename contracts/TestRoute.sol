@@ -36,6 +36,9 @@ contract TestRoute {
             path[1] = _tokenOut;
         }
 
+        address sadx = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+        address asdg = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+        WETH.approve(address(this), _amountIn);
         WETH.transferFrom(msg.sender, address(this), _amountIn);
         WETH.approve(UniswapV2Router02Address, _amountIn);
 
