@@ -22,7 +22,7 @@ describe("TestRoute contract", function () {
 
     await weth9.deposit({value: ethers.utils.parseEther("1")});
     await weth9.approve(testRoute.address, ethers.utils.parseEther("1"));
-    const setSwapTx = await testRoute.swapETHToDAIonUni(weth9_address, dai_address, ethers.utils.parseEther("1"), 1);
+    const setSwapTx = await testRoute.deposit(weth9_address, dai_address, ethers.utils.parseEther("1"), 1);
     await setSwapTx.wait();
 
     let dba = await dai.balanceOf(owner.address);

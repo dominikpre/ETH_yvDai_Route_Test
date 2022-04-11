@@ -4,24 +4,37 @@ pragma solidity ^0.8.11;
 import "./interfaces/IERC20.sol";
 import "./interfaces/IWETH9.sol";
 import "./interfaces/IUniswapV2Router02.sol";
+import "./interfaces/IVault.sol";
 
 contract TestRoute {
     address public immutable WETH;
     address public immutable DAI;
+    address public immutable yvDAI;
     address public immutable UniswapV2Router02;
 
-    constructor(address _WETH, address _DAI, address _UniswapV2Router02) {
+    constructor(address _WETH, address _DAI,address _yvDAI address _UniswapV2Router02) {
         WETH = _WETH;
         DAI = _DAI;
         UniswapV2Router02 = _UniswapV2Router02;
     }
 
-    function swapETHToDAIonUni(
+    //TODO: Create mapping of _tokenOut to _tokenOutSwap, so that if e.g., _tokenOut = yvDAI -> _tokenOutSwap = DAI
+    function deposit(
         address _tokenIn,
         address _tokenOut,
         uint256 _amountIn,
         uint256 _maxSlippage
     ) external payable {
+        swap(_tokenIn, _tokenOut, _amountIn, _maxSlippage);
+        // yvDeposit(_tokenOut, );
+    }
+
+    function swap(
+        address _tokenIn,
+        address _tokenOut,
+        uint256 _amountIn,
+        uint256 _maxSlippage
+    ) internal {
         address[] memory path;
         if (_tokenIn != WETH) {
             //TODO: Is msg.value always ETH? Or can other tokens be sent to payable functions?
@@ -46,6 +59,7 @@ contract TestRoute {
             _amountIn,
             path
         );
+        //TODO: How to handle slippage properly
         uint256 _amountOutMin = _amountOutMins[path.length - 1] * _maxSlippage;
 
         //TODO: implement block.timestamp (deadline)
@@ -53,9 +67,17 @@ contract TestRoute {
             _amountIn,
             _amountOutMin,
             path,
-            msg.sender,
+            address(this),
             block.timestamp
         );
+    }
+
+    function yvDeposit(
+        address _tokenIn,
+        address _tokenOut,
+        uint256 _amountIn
+    ) internal {
+
     }
 
     receive() external payable {}
