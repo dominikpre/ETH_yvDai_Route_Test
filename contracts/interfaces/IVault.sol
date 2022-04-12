@@ -22,6 +22,8 @@ interface IVault {
 
     function deposit(uint256) external;
 
+    function deposit(uint256, address) external;
+
     function depositAll() external;
 
     function withdraw(uint256) external;
