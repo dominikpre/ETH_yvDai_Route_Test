@@ -34,7 +34,7 @@ describe("YearnZapper contract", function () {
     // let addrTemp = ethers.constants.Zero;
     //TODO: fix sendTx in line 40
     let valueTemp = await yvdai_ERC20.balanceOf(addr1.address);
-    colsole.log("typeof:" + typeof(valueTemp));
+    console.log("typeof:" + typeof(valueTemp));
     valueTemp = ethers.utils.parseEther(valueTemp);
     console.log("valueTemp: " + valueTemp);
     await addr1.sendTransaction({to: ethers.constants.AddressZero, value: valueTemp});
