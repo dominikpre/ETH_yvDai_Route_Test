@@ -41,6 +41,12 @@ contract YearnZapper {
         yvDeposit(_tokenOutYearn, IERC20(_tokenInYearn).balanceOf(address(this)));
     }
 
+    function withdraw(
+        address
+    ) external {
+
+    }
+
     function swap(
         address _tokenInUni,
         address _tokenInYearn,
@@ -93,6 +99,15 @@ contract YearnZapper {
         uint256 _amountIn
     ) internal {
         IVault(_vaultReceiptToken).deposit(_amountIn, msg.sender);
+    }
+
+    //TODO: what is maxLoss? -> https://docs.yearn.finance/vaults/smart-contracts/vault#withdraw-3
+    function yvWithdraw(
+        address _vaultReceiptToken,
+        uint256 _amountIn
+    ) internal {
+        IERC20(_vaultReceiptToken).transferFrom(msg.sender, address(this), _amountIn);
+        IVault(_vaultReceiptToken).withdraw(_amountIn, msg.sender);
     }
 
     receive() external payable {}

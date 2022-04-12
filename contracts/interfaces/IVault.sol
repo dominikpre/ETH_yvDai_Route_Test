@@ -28,5 +28,7 @@ interface IVault {
 
     function withdraw(uint256) external;
 
+    function withdraw(uint256, address) external;
+
     function withdrawAll() external;
 }
