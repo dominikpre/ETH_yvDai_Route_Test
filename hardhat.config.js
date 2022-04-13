@@ -33,5 +33,11 @@ module.exports = {
       // accounts: process.env.MAINNET_PRIVATE_KEY ? [`0x${process.env.MAINNET_PRIVATE_KEY}`] : [],
       chainId: 1,
     },
+    hardhat: {
+      forking:{
+        url: process.env.MAINNET_URL_ALCHEMY || "",
+        blockNumber: 14576259,
+      }
+    }
   }
 };
