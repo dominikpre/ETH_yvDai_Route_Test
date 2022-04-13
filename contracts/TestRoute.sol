@@ -11,22 +11,8 @@ import "hardhat/console.sol";
 contract YearnZapper {
     //TODO: Only for debugging purposes. Will be removed when contract can accept any token.
     address public immutable WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    // address public immutable DAI;
-    // address public immutable YvDAI;
     //TODO: hardcode router?
     address public immutable UniswapV2Router02 = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
-
-    constructor(
-        // address _WETH, 
-        // address _DAI, 
-        // address _YvDAI, 
-        // address _UniswapV2Router02
-        ) {
-        // WETH = _WETH;
-        // DAI = _DAI;
-        // YvDAI = _YvDAI;
-        // UniswapV2Router02 = _UniswapV2Router02;
-    }
 
     //TODO: Create mapping of _tokenOut to _tokenOutSwap, so that if e.g., _tokenOut = yvDAI -> _tokenOutSwap = DAI
     function deposit(
@@ -41,10 +27,13 @@ contract YearnZapper {
         yvDeposit(_tokenOutYearn, IERC20(_tokenInYearn).balanceOf(address(this)));
     }
 
-    function withdraw(
-        address
+    //TODO: what is maxLoss? -> https://docs.yearn.finance/vaults/smart-contracts/vault#withdraw-3
+    function yvWithdraw(
+        address _vaultReceiptToken,
+        uint256 _amountIn
     ) external {
-
+        IERC20(_vaultReceiptToken).transferFrom(msg.sender, address(this), _amountIn);
+        IVault(_vaultReceiptToken).withdraw(_amountIn, msg.sender);
     }
 
     function swap(
@@ -101,20 +90,11 @@ contract YearnZapper {
         IVault(_vaultReceiptToken).deposit(_amountIn, msg.sender);
     }
 
-    //TODO: what is maxLoss? -> https://docs.yearn.finance/vaults/smart-contracts/vault#withdraw-3
-    function yvWithdraw(
-        address _vaultReceiptToken,
-        uint256 _amountIn
-    ) internal {
-        IERC20(_vaultReceiptToken).transferFrom(msg.sender, address(this), _amountIn);
-        IVault(_vaultReceiptToken).withdraw(_amountIn, msg.sender);
-    }
-
     receive() external payable {}
 
     fallback() external payable {}
 
     function getBalance() public view returns (uint) {
-        return address(this).balance;
+        return address(this).balance;   
     }
 }
