@@ -1,4 +1,5 @@
 const { expect } = require("chai");
+const { providers } = require("ethers");
 const { ethers } = require("hardhat");
 
 const weth9_address = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
@@ -19,9 +20,10 @@ describe("YearnZapper contract", function () {
   let dai;
   let yvdai_ERC20;
 
-  before("Should deploy YearnZapper contract successfully", async function () {
+  before("Deploy YearnZapper contract", async function () {
     [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
-
+    // console.log(owner.address);
+    // console.log(addr1.address);
     YearnZapper = await ethers.getContractFactory("YearnZapper");
     yearnZapper = await YearnZapper.deploy();
     await yearnZapper.deployed();
@@ -30,41 +32,65 @@ describe("YearnZapper contract", function () {
     dai = await ethers.getContractAt("contracts/interfaces/IERC20.sol:IERC20", dai_address);
     yvdai_ERC20 = await ethers.getContractAt("contracts/interfaces/IERC20.sol:IERC20", yvDai_address);
 
-    await owner.sendTransaction({to: addr1.address, value: ethers.utils.parseEther("1.1")});
+    // console.log(ethers.utils.formatEther(await owner.getBalance()));
+    await owner.sendTransaction({
+      to: addr1.address,
+      value: ethers.utils.parseEther("1.1")});
     let valueTemp = await yvdai_ERC20.balanceOf(addr1.address);
     await yvdai_ERC20.connect(addr1).transfer(ethers.Wallet.createRandom().address, valueTemp);
   });
 
-  it("Should have more yvDAI balance after WETH -> DAI -> yvDai", async function() {
-    // let dbb = await dai.balanceOf(addr1.address);
-    // let dbb2 = ethers.utils.formatUnits(dbb, 18);
-    // let dai_balance_before = ethers.utils.parseUnits(dbb2);
-    // console.log("DAI Balance before: " + dai_balance_before);
+  async function checkYvDaiBalance(address){
+    let yvdai_balance = await yvdai_ERC20.balanceOf(address);
+    let yvdb2 = await ethers.utils.formatUnits(yvdai_balance, 18);
+    console.log("yvDAI balance: " + yvdb2);
+    return yvdai_balance;
+  };
 
-    let yvdai_balance_before = await yvdai_ERC20.balanceOf(addr1.address);
-    let yvdbb2 = ethers.utils.formatUnits(yvdai_balance_before, 18);
-    console.log("yvDAI Balance before: " + yvdbb2);
+  async function checkDaiBalance(address) {
+    let dai_balance = await dai.balanceOf(address);
+    let db2 = ethers.utils.formatUnits(dai_balance, 18);
+    console.log("DAI balance : " + db2);
+    return dai_balance;
+  };
+
+  async function giveBalances(address) {
+    console.log("----------------------------------------");
+    console.log("DAI: " + await dai.balanceOf(address));
+    console.log("WETH: " + await weth9.balanceOf(address));
+    console.log("WyvDAI: " + await yvdai_ERC20.balanceOf(address));
+    console.log("ETH: " + ethers.utils.formatEther(await ethers.provider.getBalance(address)));
+  }
+
+
+  it("Should have more yvDAI balance after WETH -> DAI -> yvDAI", async function() {
+    let yvdai_before = await checkYvDaiBalance(addr1.address);
 
     await weth9.connect(addr1).deposit({ value: ethers.utils.parseEther("1") });
     await weth9.connect(addr1).approve(yearnZapper.address, ethers.utils.parseEther("1"));
     const setSwapTx = await yearnZapper.connect(addr1).deposit(weth9_address, yvDai_address, ethers.utils.parseEther("1"), 1);
     await setSwapTx.wait();
+    console.log("Tx: WETH -> DAI -> yvDAI")
 
-    // let dba = await dai.balanceOf(addr1.address);
-    // let dba2 = ethers.utils.formatUnits(dba, 18);
-    // let dai_balance_after = ethers.utils.parseUnits(dba2);
-    // console.log("DAI Balance after: " + dai_balance_after);
+    let yvdai_after = await checkYvDaiBalance(addr1.address);
 
-    let yvdai_balance_after = await yvdai_ERC20.balanceOf(addr1.address);
-    let yvdba2 = ethers.utils.formatUnits(yvdai_balance_after, 18);
-    console.log("yvDAI Balance after: " + yvdba2);
-
-    expect(yvdai_balance_after).to.be.above(yvdai_balance_before);
+    expect(yvdai_after).to.be.above(yvdai_before);
   });
 
-  it("Should have no yvDAI in wallet, but more DAI than before", async function() {
-    //TODO: implement test for withdraw function
-  });
+  it("Should have no yvDAI in wallet, but more DAI after the tx", async function() {
 
+    let yvdai_before2 = await checkYvDaiBalance(addr1.address);
+    let dai_before2 = await checkDaiBalance(addr1.address);
+    
+    await yvdai_ERC20.connect(addr1).approve(yearnZapper.address, yvdai_before2);
+    const withdrawTx = await yearnZapper.connect(addr1).yvWithdraw(yvDai_address, yvdai_before2);
+    withdrawTx.wait();
+    console.log("Tx: yvDAI -> DAI")
+
+    let yvdai_after2 = await checkYvDaiBalance(addr1.address);
+    let dai_after2 = await checkDaiBalance(addr1.address);
+
+    expect(yvdai_after2).to.be.below(yvdai_before2);
+  });
 });
 
